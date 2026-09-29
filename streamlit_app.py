@@ -4,8 +4,6 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
 
 st.set_page_config(page_title="SB-103 Dynamic 3×3", layout="wide")
 st.title("SB-103 Dynamic 3×3 PDF Generator")
@@ -117,17 +115,16 @@ def make_sheet(rows):
     return sheet
 
 def make_pdf(sheet):
-    # Keep the same physical size as the 300-DPI sheet, but embed a 2× raster = 600 DPI.
-    hi=sheet.resize((sheet.width*2,sheet.height*2),Image.Resampling.LANCZOS)
-    png=io.BytesIO()
-    hi.save(png,"PNG",compress_level=0)
-    png.seek(0)
-    pw=sheet.width/300*72
-    ph=sheet.height/300*72
-    out=io.BytesIO()
-    c=canvas.Canvas(out,pagesize=(pw,ph))
-    c.drawImage(ImageReader(png),0,0,width=pw,height=ph,mask="auto")
-    c.showPage(); c.save()
+    # The sheet is the same physical size as the earlier 300-DPI version.
+    # Upscale 2×, then save the PDF at 600 DPI using Pillow only.
+    hi = sheet.resize((sheet.width * 2, sheet.height * 2), Image.Resampling.LANCZOS)
+    out = io.BytesIO()
+    hi.save(
+        out,
+        format="PDF",
+        resolution=600.0,
+        title="SB-103 3x3 - 600 DPI"
+    )
     return out.getvalue()
 
 st.subheader("Customer data")
